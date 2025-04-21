@@ -477,6 +477,12 @@ end
 
 -- Section System
 function MontyUI:CreateSection(name, parent, layoutOrder)
+
+if type(name) ~= "string" then
+        name = tostring(name) -- Try to convert to string
+        -- Alternatively: error("Section name must be a string")
+    end
+
     -- Create the section frame
     local sectionFrame = Instance.new("Frame")
     sectionFrame.Name = name .. "Section"
