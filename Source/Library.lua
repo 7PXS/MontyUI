@@ -41,6 +41,13 @@ local ICONS = {
     CLOSE = "rbxassetid://10734974619"
 }
 
+function safeToString(value)
+    if type(value) ~= "string" then
+        return tostring(value)
+    end
+    return value
+end
+
 -- Utility Functions
 local Utility = {}
 
@@ -475,13 +482,9 @@ function MontyUI:CreateTab(name, icon, category, layoutOrder)
     }
 end
 
--- Section System
+-- Fix for CreateSection function
 function MontyUI:CreateSection(name, parent, layoutOrder)
-
-if type(name) ~= "string" then
-        name = tostring(name) -- Try to convert to string
-        -- Alternatively: error("Section name must be a string")
-    end
+    name = safeToString(name)
 
     -- Create the section frame
     local sectionFrame = Instance.new("Frame")
@@ -494,6 +497,722 @@ if type(name) ~= "string" then
     
     -- UI Corner
     Utility.CreateRoundUICorner(sectionFrame, 6)
+    
+    -- Section Title
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Position = UDim2.new(0, 10, 0, 5)
+    titleLabel.Size = UDim2.new(1, -20, 0, 20)
+    titleLabel.Font = FONTS.HEADER
+    titleLabel.Text = name
+    titleLabel.TextColor3 = COLORS.TEXT_PRIMARY
+    titleLabel.TextSize = 16
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = sectionFrame
+    
+    -- Items Container (rest of the code remains the same)
+    local itemsContainer = Instance.new("Frame")
+    itemsContainer.Name = "Items"
+    itemsContainer.BackgroundTransparency = 1
+    itemsContainer.Position = UDim2.new(0, 0, 0, 30)
+    itemsContainer.Size = UDim2.new(1, 0, 0, 0)
+    itemsContainer.AutomaticSize = Enum.AutomaticSize.Y
+    itemsContainer.Parent = sectionFrame
+    
+    -- Layout for items
+    local itemsLayout = Instance.new("UIListLayout")
+    itemsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    itemsLayout.Padding = UDim.new(0, 5)
+    itemsLayout.Parent = itemsContainer
+    
+    -- Padding for items
+    local itemsPadding = Instance.new("UIPadding")
+    itemsPadding.PaddingLeft = UDim.new(0, 10)
+    itemsPadding.PaddingRight = UDim.new(0, 10)
+    itemsPadding.PaddingTop = UDim.new(0, 0)
+    itemsPadding.PaddingBottom = UDim.new(0, 10)
+    itemsPadding.Parent = itemsContainer
+    
+    -- Return object to create items
+    return {
+        Frame = sectionFrame,
+        ItemsContainer = itemsContainer,
+        
+        CreateToggle = function(toggleName, default, callback, layoutOrder)
+            return self:CreateToggle(toggleName, default, callback, itemsContainer, layoutOrder)
+        end,
+        
+        CreateSlider = function(sliderName, min, max, default, decimals, callback, suffix, layoutOrder)
+            return self:CreateSlider(sliderName, min, max, default, decimals, callback, suffix, itemsContainer, layoutOrder)
+        end,
+        
+        CreateDropdown = function(dropdownName, options, default, callback, layoutOrder)
+            return self:CreateDropdown(dropdownName, options, default, callback, itemsContainer, layoutOrder)
+        end,
+        
+        CreateButton = function(buttonName, callback, layoutOrder)
+            return self:CreateButton(buttonName, callback, itemsContainer, layoutOrder)
+        end,
+        
+        CreateColorPicker = function(colorName, default, callback, layoutOrder)
+            return self:CreateColorPicker(colorName, default, callback, itemsContainer, layoutOrder)
+        end,
+        
+        CreateLabel = function(labelText, layoutOrder)
+            return self:CreateLabel(labelText, itemsContainer, layoutOrder)
+        end
+    }
+end
+
+-- Fix for CreateToggle function
+function MontyUI:CreateToggle(name, default, callback, parent, layoutOrder)
+    name = safeToString(name)
+    
+    -- Create toggle container
+    local toggleContainer = Instance.new("Frame")
+    toggleContainer.Name = name .. "Toggle"
+    toggleContainer.BackgroundTransparency = 1
+    toggleContainer.Size = UDim2.new(1, 0, 0, 30)
+    toggleContainer.LayoutOrder = layoutOrder or 0
+    toggleContainer.Parent = parent
+    
+    -- Toggle text
+    local toggleText = Instance.new("TextLabel")
+    toggleText.Name = "Text"
+    toggleText.BackgroundTransparency = 1
+    toggleText.Position = UDim2.new(0, 0, 0, 0)
+    toggleText.Size = UDim2.new(1, -50, 1, 0)
+    toggleText.Font = FONTS.TEXT
+    toggleText.Text = name
+    toggleText.TextColor3 = COLORS.TEXT_PRIMARY
+    toggleText.TextSize = 14
+    toggleText.TextXAlignment = Enum.TextXAlignment.Left
+    toggleText.Parent = toggleContainer
+    
+    -- Toggle background
+    local toggleBackground = Instance.new("Frame")
+    toggleBackground.Name = "Background"
+    toggleBackground.BackgroundColor3 = default and COLORS.TOGGLE_ON or COLORS.TOGGLE_OFF
+    toggleBackground.Position = UDim2.new(1, -40, 0.5, -10)
+    toggleBackground.Size = UDim2.new(0, 40, 0, 20)
+    toggleBackground.Parent = toggleContainer
+    
+    -- Toggle background corner
+    Utility.CreateRoundUICorner(toggleBackground, 10)
+    
+    -- Toggle knob
+    local toggleKnob = Instance.new("Frame")
+    toggleKnob.Name = "Knob"
+    toggleKnob.BackgroundColor3 = COLORS.TOGGLE_KNOB
+    toggleKnob.Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+    toggleKnob.Size = UDim2.new(0, 16, 0, 16)
+    toggleKnob.Parent = toggleBackground
+    
+    -- Toggle knob corner
+    Utility.CreateRoundUICorner(toggleKnob, 8)
+    
+    -- Toggle button
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Name = "Button"
+    toggleButton.BackgroundTransparency = 1
+    toggleButton.Size = UDim2.new(1, 0, 1, 0)
+    toggleButton.Text = ""
+    toggleButton.Parent = toggleContainer
+    
+    -- Toggle state
+    local enabled = default or false
+    
+    -- Toggle function
+    local function updateToggle()
+        enabled = not enabled
+        Utility.Tween(toggleBackground, {BackgroundColor3 = enabled and COLORS.TOGGLE_ON or COLORS.TOGGLE_OFF}, 0.2)
+        Utility.Tween(toggleKnob, {Position = enabled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}, 0.2)
+        
+        if callback then
+            callback(enabled)
+        end
+    end
+    
+    -- Events
+    toggleButton.MouseButton1Click:Connect(updateToggle)
+    
+    return {
+        Toggle = function()
+            updateToggle()
+        end,
+        
+        SetState = function(state)
+            if state ~= enabled then
+                updateToggle()
+            end
+        end,
+        
+        GetState = function()
+            return enabled
+        end,
+        
+        UpdateText = function(newText)
+            newText = safeToString(newText)
+            toggleText.Text = newText
+        end
+    }
+end
+
+-- Fix for CreateSlider function
+function MontyUI:CreateSlider(name, min, max, default, decimals, callback, suffix, parent, layoutOrder)
+    name = safeToString(name)
+    suffix = suffix and safeToString(suffix) or ""
+    
+    -- Validate inputs
+    min = type(min) == "number" and min or 0
+    max = type(max) == "number" and max or 100
+    default = type(default) == "number" and math.clamp(default, min, max) or min
+    decimals = type(decimals) == "number" and math.clamp(decimals, 0, 10) or 0
+    
+    -- Create slider container
+    local sliderContainer = Instance.new("Frame")
+    sliderContainer.Name = name .. "Slider"
+    sliderContainer.BackgroundTransparency = 1
+    sliderContainer.Size = UDim2.new(1, 0, 0, 50)
+    sliderContainer.LayoutOrder = layoutOrder or 0
+    sliderContainer.Parent = parent
+    
+    -- Slider text
+    local sliderText = Instance.new("TextLabel")
+    sliderText.Name = "Text"
+    sliderText.BackgroundTransparency = 1
+    sliderText.Position = UDim2.new(0, 0, 0, 0)
+    sliderText.Size = UDim2.new(1, 0, 0, 20)
+    sliderText.Font = FONTS.TEXT
+    sliderText.Text = name
+    sliderText.TextColor3 = COLORS.TEXT_PRIMARY
+    sliderText.TextSize = 14
+    sliderText.TextXAlignment = Enum.TextXAlignment.Left
+    sliderText.Parent = sliderContainer
+    
+    -- Value text
+    local valueText = Instance.new("TextLabel")
+    valueText.Name = "Value"
+    valueText.BackgroundTransparency = 1
+    valueText.Position = UDim2.new(1, -50, 0, 0)
+    valueText.Size = UDim2.new(0, 50, 0, 20)
+    valueText.Font = FONTS.TEXT
+    valueText.Text = tostring(default) .. suffix
+    valueText.TextColor3 = COLORS.TEXT_SECONDARY
+    valueText.TextSize = 14
+    valueText.TextXAlignment = Enum.TextXAlignment.Right
+    valueText.Parent = sliderContainer
+    
+    -- Slider background
+    local sliderBackground = Instance.new("Frame")
+    sliderBackground.Name = "Background"
+    sliderBackground.BackgroundColor3 = COLORS.SLIDER_BACKGROUND
+    sliderBackground.Position = UDim2.new(0, 0, 0, 25)
+    sliderBackground.Size = UDim2.new(1, 0, 0, 6)
+    sliderBackground.Parent = sliderContainer
+    
+    -- Slider background corner
+    Utility.CreateRoundUICorner(sliderBackground, 3)
+    
+    -- Slider fill
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Name = "Fill"
+    sliderFill.BackgroundColor3 = COLORS.SLIDER_FILL
+    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    sliderFill.Parent = sliderBackground
+    
+    -- Slider fill corner
+    Utility.CreateRoundUICorner(sliderFill, 3)
+    
+    -- Slider knob
+    local sliderKnob = Instance.new("Frame")
+    sliderKnob.Name = "Knob"
+    sliderKnob.BackgroundColor3 = COLORS.SLIDER_KNOB
+    sliderKnob.Position = UDim2.new((default - min) / (max - min), -6, 0.5, -6)
+    sliderKnob.Size = UDim2.new(0, 12, 0, 12)
+    sliderKnob.ZIndex = 2
+    sliderKnob.Parent = sliderBackground
+    
+    -- Slider knob corner
+    Utility.CreateRoundUICorner(sliderKnob, 6)
+    
+    -- Slider button
+    local sliderButton = Instance.new("TextButton")
+    sliderButton.Name = "Button"
+    sliderButton.BackgroundTransparency = 1
+    sliderButton.Size = UDim2.new(1, 0, 1, 0)
+    sliderButton.Text = ""
+    sliderButton.ZIndex = 3
+    sliderButton.Parent = sliderBackground
+    
+    -- Current value
+    local value = default
+    
+    -- Format value
+    local function formatValue(val)
+        if decimals <= 0 then
+            return math.floor(val)
+        else
+            local fmt = "%." .. decimals .. "f"
+            return string.format(fmt, val)
+        end
+    end
+    
+    -- Update slider
+    local function updateSlider(newValue)
+        -- Clamp value
+        newValue = math.clamp(newValue, min, max)
+        value = newValue
+        
+        -- Calculate position
+        local percent = (value - min) / (max - min)
+        
+        -- Update UI
+        Utility.Tween(sliderFill, {Size = UDim2.new(percent, 0, 1, 0)}, 0.1)
+        Utility.Tween(sliderKnob, {Position = UDim2.new(percent, -6, 0.5, -6)}, 0.1)
+        valueText.Text = formatValue(value) .. suffix
+        
+        -- Call callback
+        if callback then
+            callback(value)
+        end
+    end
+    
+    -- Drag functionality
+    local isDragging = false
+    
+    sliderButton.MouseButton1Down:Connect(function()
+        isDragging = true
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = false
+        end
+    end)
+    
+    sliderButton.MouseButton1Click:Connect(function()
+        local mousePos = UserInputService:GetMouseLocation().X
+        local sliderPos = sliderBackground.AbsolutePosition.X
+        local sliderWidth = sliderBackground.AbsoluteSize.X
+        local percent = math.clamp((mousePos - sliderPos) / sliderWidth, 0, 1)
+        local newValue = min + (max - min) * percent
+        updateSlider(newValue)
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
+            local mousePos = UserInputService:GetMouseLocation().X
+            local sliderPos = sliderBackground.AbsolutePosition.X
+            local sliderWidth = sliderBackground.AbsoluteSize.X
+            local percent = math.clamp((mousePos - sliderPos) / sliderWidth, 0, 1)
+            local newValue = min + (max - min) * percent
+            updateSlider(newValue)
+        end
+    end)
+    
+    -- Set default value
+    updateSlider(default)
+    
+    return {
+        SetValue = function(newValue)
+            updateSlider(newValue)
+        end,
+        
+        GetValue = function()
+            return value
+        end,
+        
+        UpdateText = function(newText)
+            newText = safeToString(newText)
+            sliderText.Text = newText
+        end
+    }
+end
+
+-- Fix for CreateDropdown function
+function MontyUI:CreateDropdown(name, options, default, callback, parent, layoutOrder)
+    name = safeToString(name)
+    
+    -- Options validation
+    if type(options) ~= "table" or #options == 0 then
+        options = {"Option 1"}
+    end
+    
+    -- Default validation
+    if type(default) ~= "string" or not table.find(options, default) then
+        default = options[1]
+    end
+    
+    -- Create dropdown container
+    local dropdownContainer = Instance.new("Frame")
+    dropdownContainer.Name = name .. "Dropdown"
+    dropdownContainer.BackgroundTransparency = 1
+    dropdownContainer.Size = UDim2.new(1, 0, 0, 50)
+    dropdownContainer.LayoutOrder = layoutOrder or 0
+    dropdownContainer.Parent = parent
+    
+    -- Dropdown text
+    local dropdownText = Instance.new("TextLabel")
+    dropdownText.Name = "Text"
+    dropdownText.BackgroundTransparency = 1
+    dropdownText.Position = UDim2.new(0, 0, 0, 0)
+    dropdownText.Size = UDim2.new(1, 0, 0, 20)
+    dropdownText.Font = FONTS.TEXT
+    dropdownText.Text = name
+    dropdownText.TextColor3 = COLORS.TEXT_PRIMARY
+    dropdownText.TextSize = 14
+    dropdownText.TextXAlignment = Enum.TextXAlignment.Left
+    dropdownText.Parent = dropdownContainer
+    
+    -- Dropdown button
+    local dropdownButton = Instance.new("TextButton")
+    dropdownButton.Name = "Button"
+    dropdownButton.BackgroundColor3 = COLORS.COMPONENT_BACKGROUND
+    dropdownButton.Position = UDim2.new(0, 0, 0, 25)
+    dropdownButton.Size = UDim2.new(1, 0, 0, 30)
+    dropdownButton.Font = FONTS.TEXT
+    dropdownButton.Text = ""
+    dropdownButton.TextColor3 = COLORS.TEXT_PRIMARY
+    dropdownButton.TextSize = 14
+    dropdownButton.Parent = dropdownContainer
+    
+    -- Dropdown corner
+    Utility.CreateRoundUICorner(dropdownButton, 6)
+    
+    -- Selected value text
+    local valueText = Instance.new("TextLabel")
+    valueText.Name = "Value"
+    valueText.BackgroundTransparency = 1
+    valueText.Position = UDim2.new(0, 10, 0, 0)
+    valueText.Size = UDim2.new(1, -40, 1, 0)
+    valueText.Font = FONTS.TEXT
+    valueText.Text = default
+    valueText.TextColor3 = COLORS.TEXT_PRIMARY
+    valueText.TextSize = 14
+    valueText.TextXAlignment = Enum.TextXAlignment.Left
+    valueText.Parent = dropdownButton
+    
+    -- Dropdown arrow
+    local dropdownArrow = Instance.new("ImageLabel")
+    dropdownArrow.Name = "Arrow"
+    dropdownArrow.BackgroundTransparency = 1
+    dropdownArrow.Position = UDim2.new(1, -25, 0.5, -8)
+    dropdownArrow.Size = UDim2.new(0, 16, 0, 16)
+    dropdownArrow.Image = "rbxassetid://6031091004"
+    dropdownArrow.ImageColor3 = COLORS.TEXT_SECONDARY
+    dropdownArrow.Parent = dropdownButton
+    
+    -- Options frame (dropdown menu)
+    local optionsFrame = Instance.new("Frame")
+    optionsFrame.Name = "Options"
+    optionsFrame.BackgroundColor3 = COLORS.COMPONENT_BACKGROUND
+    optionsFrame.BorderSizePixel = 0
+    optionsFrame.Position = UDim2.new(0, 0, 1, 5)
+    optionsFrame.Size = UDim2.new(1, 0, 0, #options * 30)
+    optionsFrame.Visible = false
+    optionsFrame.ZIndex = 10
+    optionsFrame.Parent = dropdownButton
+    
+    -- Options corner
+    Utility.CreateRoundUICorner(optionsFrame, 6)
+    
+    -- Current selection
+    local selectedOption = default
+    
+    -- Create options
+    for i, option in ipairs(options) do
+        local optionButton = Instance.new("TextButton")
+        optionButton.Name = option .. "Option"
+        optionButton.BackgroundTransparency = 1
+        optionButton.Position = UDim2.new(0, 0, 0, (i - 1) * 30)
+        optionButton.Size = UDim2.new(1, 0, 0, 30)
+        optionButton.Font = FONTS.TEXT
+        optionButton.Text = option
+        optionButton.TextColor3 = option == default and COLORS.ACCENT or COLORS.TEXT_PRIMARY
+        optionButton.TextSize = 14
+        optionButton.ZIndex = 11
+        optionButton.Parent = optionsFrame
+        
+        -- Option events
+        optionButton.MouseEnter:Connect(function()
+            if option ~= selectedOption then
+                Utility.Tween(optionButton, {BackgroundTransparency = 0.9}, 0.2)
+            end
+        end)
+        
+        optionButton.MouseLeave:Connect(function()
+            if option ~= selectedOption then
+                Utility.Tween(optionButton, {BackgroundTransparency = 1}, 0.2)
+            end
+        end)
+        
+        optionButton.MouseButton1Click:Connect(function()
+            -- Update selection
+            selectedOption = option
+            valueText.Text = option
+            
+            -- Update appearance
+            for _, child in pairs(optionsFrame:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child.TextColor3 = child.Text == option and COLORS.ACCENT or COLORS.TEXT_PRIMARY
+                end
+            end
+            
+            -- Close dropdown
+            optionsFrame.Visible = false
+            
+            -- Call callback
+            if callback then
+                callback(option)
+            end
+        end)
+    end
+    
+    -- Dropdown events
+    dropdownButton.MouseButton1Click:Connect(function()
+        optionsFrame.Visible = not optionsFrame.Visible
+        local rotation = optionsFrame.Visible and 180 or 0
+        Utility.Tween(dropdownArrow, {Rotation = rotation}, 0.2)
+    end)
+    
+    -- Close dropdown when clicking elsewhere
+    UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mousePos = UserInputService:GetMouseLocation()
+            local inBounds = false
+            
+            -- Check if mouse is within dropdown bounds
+            if optionsFrame.Visible then
+                local framePos = optionsFrame.AbsolutePosition
+                local frameSize = optionsFrame.AbsoluteSize
+                
+                inBounds = mousePos.X >= framePos.X and mousePos.X <= framePos.X + frameSize.X and
+                           mousePos.Y >= framePos.Y and mousePos.Y <= framePos.Y + frameSize.Y
+                
+                if not inBounds then
+                    local buttonPos = dropdownButton.AbsolutePosition
+                    local buttonSize = dropdownButton.AbsoluteSize
+                    
+                    inBounds = mousePos.X >= buttonPos.X and mousePos.X <= buttonPos.X + buttonSize.X and
+                               mousePos.Y >= buttonPos.Y and mousePos.Y <= buttonPos.Y + buttonSize.Y
+                               
+                    if not inBounds then
+                        optionsFrame.Visible = false
+                        Utility.Tween(dropdownArrow, {Rotation = 0}, 0.2)
+                    end
+                end
+            end
+        end
+    end)
+    
+    return {
+        SetOption = function(option)
+            if table.find(options, option) then
+                -- Update UI
+                selectedOption = option
+                valueText.Text = option
+                
+                -- Update appearance
+                for _, child in pairs(optionsFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child.TextColor3 = child.Text == option and COLORS.ACCENT or COLORS.TEXT_PRIMARY
+                    end
+                end
+                
+                -- Call callback
+                if callback then
+                    callback(option)
+                end
+            end
+        end,
+        
+        GetOption = function()
+            return selectedOption
+        end,
+        
+        UpdateOptions = function(newOptions)
+            if type(newOptions) == "table" and #newOptions > 0 then
+                -- Clear old options
+                for _, child in pairs(optionsFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                
+                -- Update options frame size
+                optionsFrame.Size = UDim2.new(1, 0, 0, #newOptions * 30)
+                
+                -- Check if selected option exists in new options
+                if not table.find(newOptions, selectedOption) then
+                    selectedOption = newOptions[1]
+                    valueText.Text = selectedOption
+                end
+                
+                -- Create new options
+                for i, option in ipairs(newOptions) do
+                    local optionButton = Instance.new("TextButton")
+                    optionButton.Name = option .. "Option"
+                    optionButton.BackgroundTransparency = 1
+                    optionButton.Position = UDim2.new(0, 0, 0, (i - 1) * 30)
+                    optionButton.Size = UDim2.new(1, 0, 0, 30)
+                    optionButton.Font = FONTS.TEXT
+                    optionButton.Text = option
+                    optionButton.TextColor3 = option == selectedOption and COLORS.ACCENT or COLORS.TEXT_PRIMARY
+                    optionButton.TextSize = 14
+                    optionButton.ZIndex = 11
+                    optionButton.Parent = optionsFrame
+                    
+                    -- Option events
+                    optionButton.MouseEnter:Connect(function()
+                        if option ~= selectedOption then
+                            Utility.Tween(optionButton, {BackgroundTransparency = 0.9}, 0.2)
+                        end
+                    end)
+                    
+                    optionButton.MouseLeave:Connect(function()
+                        if option ~= selectedOption then
+                            Utility.Tween(optionButton, {BackgroundTransparency = 1}, 0.2)
+                        end
+                    end)
+                    
+                    optionButton.MouseButton1Click:Connect(function()
+                        -- Update selection
+                        selectedOption = option
+                        valueText.Text = option
+                        
+                        -- Update appearance
+                        for _, child in pairs(optionsFrame:GetChildren()) do
+                            if child:IsA("TextButton") then
+                                child.TextColor3 = child.Text == option and COLORS.ACCENT or COLORS.TEXT_PRIMARY
+                            end
+                        end
+                        
+                        -- Close dropdown
+                        optionsFrame.Visible = false
+                        
+                        -- Call callback
+                        if callback then
+                            callback(option)
+                        end
+                    end)
+                end
+            end
+        end,
+        
+        UpdateText = function(newText)
+            newText = safeToString(newText)
+            dropdownText.Text = newText
+        end
+    }
+end
+
+-- Fix for CreateButton function
+function MontyUI:CreateButton(name, callback, parent, layoutOrder)
+    name = safeToString(name)
+    
+    -- Create button container
+    local buttonContainer = Instance.new("Frame")
+    buttonContainer.Name = name .. "Button"
+    buttonContainer.BackgroundTransparency = 1
+    buttonContainer.Size = UDim2.new(1, 0, 0, 30)
+    buttonContainer.LayoutOrder = layoutOrder or 0
+    buttonContainer.Parent = parent
+    
+    -- Button
+    local button = Instance.new("TextButton")
+    button.Name = "Button"
+    button.BackgroundColor3 = COLORS.COMPONENT_BACKGROUND
+    button.Size = UDim2.new(1, 0, 1, 0)
+    button.Font = FONTS.TEXT
+    button.Text = name
+    button.TextColor3 = COLORS.TEXT_PRIMARY
+    button.TextSize = 14
+    button.Parent = buttonContainer
+    
+    -- Button corner
+    Utility.CreateRoundUICorner(button, 6)
+    
+    -- Button events
+    button.MouseEnter:Connect(function()
+        Utility.Tween(button, {BackgroundColor3 = Color3.fromRGB(
+            COLORS.COMPONENT_BACKGROUND.R * 1.1,
+            COLORS.COMPONENT_BACKGROUND.G * 1.1,
+            COLORS.COMPONENT_BACKGROUND.B * 1.1
+        )}, 0.2)
+    end)
+    
+    button.MouseLeave:Connect(function()
+        Utility.Tween(button, {BackgroundColor3 = COLORS.COMPONENT_BACKGROUND}, 0.2)
+    end)
+    
+    button.MouseButton1Down:Connect(function()
+        Utility.Tween(button, {BackgroundColor3 = COLORS.ACCENT}, 0.1)
+    end)
+    
+    button.MouseButton1Up:Connect(function()
+        Utility.Tween(button, {BackgroundColor3 = Color3.fromRGB(
+            COLORS.COMPONENT_BACKGROUND.R * 1.1,
+            COLORS.COMPONENT_BACKGROUND.G * 1.1,
+            COLORS.COMPONENT_BACKGROUND.B * 1.1
+        )}, 0.1)
+    end)
+    
+    button.MouseButton1Click:Connect(function()
+        if callback then
+            callback()
+        end
+    end)
+    
+    return {
+        UpdateText = function(newText)
+            newText = safeToString(newText)
+            button.Text = newText
+        end
+    }
+end
+
+-- Fix for CreateColorPicker function
+function MontyUI:CreateColorPicker(name, default, callback, parent, layoutOrder)
+    name = safeToString(name)
+    
+    -- Default color validation
+    if typeof(default) ~= "Color3" then
+        default = Color3.fromRGB(255, 255, 255)
+    end
+    
+    -- Create color picker container
+    local colorPickerContainer = Instance.new("Frame")
+    colorPickerContainer.Name = name .. "ColorPicker"
+    colorPickerContainer.BackgroundTransparency = 1
+    colorPickerContainer.Size = UDim2.new(1, 0, 0, 50)
+    colorPickerContainer.LayoutOrder = layoutOrder or 0
+    colorPickerContainer.Parent = parent
+    
+    -- Color picker text
+    local colorText = Instance.new("TextLabel")
+    colorText.Name = "Text"
+    colorText.BackgroundTransparency = 1
+    colorText.Position = UDim2.new(0, 0, 0, 0)
+    colorText.Size = UDim2.new(1, -60, 0, 20)
+    colorText.Font = FONTS.TEXT
+    colorText.Text = name
+    colorText.TextColor3 = COLORS.TEXT_PRIMARY
+    colorText.TextSize = 14
+    colorText.TextXAlignment = Enum.TextXAlignment.Left
+    colorText.Parent = colorPickerContainer
+    
+    -- Color display
+    local colorDisplay = Instance.new("Frame")
+    colorDisplay.Name = "Display"
+    colorDisplay.BackgroundColor3 = default
+    colorDisplay.Position = UDim2.new(1, -50, 0, 0)
+    colorDisplay.Size = UDim2.new(0, 50, 0, 20)
+    colorDisplay.Parent = colorPickerContainer
+    
+    -- Color display corner
+    Utility.CreateRoundUICorner(colorDisplay, 6)
     
     -- Section Title
     local titleLabel = Instance.new("TextLabel")
