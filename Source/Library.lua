@@ -72,12 +72,12 @@ function Utility.CreateStroke(parent, thickness, color)
 end
 
 -- Main Library
-local MaxhubUI = {}
-MaxhubUI.__index = MaxhubUI
+local MontyUI = {}
+MontyUI.__index = MontyUI
 
 -- Initialize the UI Library
-function MaxhubUI.new(title)
-    local self = setmetatable({}, MaxhubUI)
+function MontyUI.new(title)
+    local self = setmetatable({}, MontyUI)
     
     -- Properties
     self.Visible = true
@@ -90,15 +90,15 @@ function MaxhubUI.new(title)
     self.StartPos = UDim2.new(0.5, -350, 0.5, -200)
     
     -- Create the main UI
-    self:CreateUI(title or "Maxhub")
+    self:CreateUI(title or "Monty Hub")
     
     return self
 end
 
-function MaxhubUI:CreateUI(title)
+function MontyUI:CreateUI(title)
     -- Main UI
     self.MainUI = Instance.new("ScreenGui")
-    self.MainUI.Name = "MaxhubUI"
+    self.MainUI.Name = "MontyUI"
     self.MainUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.MainUI.IgnoreGuiInset = true
     
@@ -297,7 +297,7 @@ function MaxhubUI:CreateUI(title)
 end
 
 -- Category System
-function MaxhubUI:CreateCategory(name, icon, layoutOrder)
+function MontyUI:CreateCategory(name, icon, layoutOrder)
     -- Create category label
     local categoryLabel = Instance.new("TextLabel")
     categoryLabel.Name = name .. "Category"
@@ -333,7 +333,7 @@ function MaxhubUI:CreateCategory(name, icon, layoutOrder)
 end
 
 -- Tab System
-function MaxhubUI:CreateTab(name, icon, category, layoutOrder)
+function MontyUI:CreateTab(name, icon, category, layoutOrder)
     -- Create content frame for this tab
     local contentFrame = Instance.new("ScrollingFrame")
     contentFrame.Name = name .. "Content"
@@ -476,7 +476,7 @@ function MaxhubUI:CreateTab(name, icon, category, layoutOrder)
 end
 
 -- Section System
-function MaxhubUI:CreateSection(name, parent, layoutOrder)
+function MontyUI:CreateSection(name, parent, layoutOrder)
     -- Create the section frame
     local sectionFrame = Instance.new("Frame")
     sectionFrame.Name = name .. "Section"
@@ -557,7 +557,7 @@ function MaxhubUI:CreateSection(name, parent, layoutOrder)
 end
 
 -- Sub Tab System
-function MaxhubUI:CreateSubTabs(tabNames, parent)
+function MontyUI:CreateSubTabs(tabNames, parent)
     -- Create container for sub tabs
     local subTabContainer = Instance.new("Frame")
     subTabContainer.Name = "SubTabContainer"
