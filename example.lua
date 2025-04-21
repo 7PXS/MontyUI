@@ -1,7 +1,7 @@
-local MontyUI = loadstring(game:HttpGet("URL"))()
+local MontyUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/7PXS/MontyUI/refs/heads/main/Source/Library.lua"))()
 
 -- Create the main UI window with title
-local UI = MontyUI.new("Maxhub Premium")
+local UI = MontyUI.new("Monty Hub")
 
 -- Create categories
 local playerCategory = UI:CreateCategory("Player", nil, 1)
