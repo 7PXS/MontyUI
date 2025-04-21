@@ -97,7 +97,7 @@ function MontyUI.new(title)
     self.StartPos = UDim2.new(0.5, -350, 0.5, -200)
     
     -- Create the main UI
-    self:CreateUI(title or "Monty Hub")
+    self:CreateUI(safeToString(title or "Monty Hub"))
     
     return self
 end
@@ -171,7 +171,7 @@ function MontyUI:CreateUI(title)
     Title.Position = UDim2.new(0, 10, 0, 0)
     Title.Size = UDim2.new(0, 200, 1, 0)
     Title.Font = FONTS.HEADER
-    Title.Text = title
+    Title.Text = safeToString(title)
     Title.TextColor3 = COLORS.TEXT_PRIMARY
     Title.TextSize = 16
     Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -305,6 +305,9 @@ end
 
 -- Category System
 function MontyUI:CreateCategory(name, icon, layoutOrder)
+    name = safeToString(name)
+    icon = safeToString(icon)
+    
     -- Create category label
     local categoryLabel = Instance.new("TextLabel")
     categoryLabel.Name = name .. "Category"
@@ -341,6 +344,9 @@ end
 
 -- Tab System
 function MontyUI:CreateTab(name, icon, category, layoutOrder)
+    name = safeToString(name)
+    icon = safeToString(icon)
+    
     -- Create content frame for this tab
     local contentFrame = Instance.new("ScrollingFrame")
     contentFrame.Name = name .. "Content"
@@ -482,7 +488,7 @@ function MontyUI:CreateTab(name, icon, category, layoutOrder)
     }
 end
 
--- Fix for CreateSection function
+-- Section function
 function MontyUI:CreateSection(name, parent, layoutOrder)
     name = safeToString(name)
 
@@ -511,7 +517,7 @@ function MontyUI:CreateSection(name, parent, layoutOrder)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = sectionFrame
     
-    -- Items Container (rest of the code remains the same)
+    -- Items Container
     local itemsContainer = Instance.new("Frame")
     itemsContainer.Name = "Items"
     itemsContainer.BackgroundTransparency = 1
@@ -565,7 +571,7 @@ function MontyUI:CreateSection(name, parent, layoutOrder)
     }
 end
 
--- Fix for CreateToggle function
+-- Toggle function
 function MontyUI:CreateToggle(name, default, callback, parent, layoutOrder)
     name = safeToString(name)
     
@@ -659,7 +665,7 @@ function MontyUI:CreateToggle(name, default, callback, parent, layoutOrder)
     }
 end
 
--- Fix for CreateSlider function
+-- Slider function
 function MontyUI:CreateSlider(name, min, max, default, decimals, callback, suffix, parent, layoutOrder)
     name = safeToString(name)
     suffix = suffix and safeToString(suffix) or ""
