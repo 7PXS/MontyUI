@@ -693,3 +693,5 @@ function MontyUI:CreateSubTabs(tabNames, parent)
     
     return subTabsObject
 end
+
+return MontyUI
